@@ -1,17 +1,16 @@
 import { connectionDB } from "../database/database.js";
-import bcrypt from "bcrypt";
+import { v4 as uuidV4 } from 'uuid';
+
 
 export async function signUp(req, res) {
     try {
         const { name, email, password } = res.locals.user;
 
-        const passwordHash = bcrypt.hashSync(password, 10);
-
         await connectionDB.query(`
-        INSERT INTO 
-        users (name, email, password)
-        VALUES ($1, $2, $3)
-        `, [name, email, passwordHash]);
+            INSERT INTO 
+            users (name, email, password)
+            VALUES ($1, $2, $3);
+        `, [name, email, password]);
 
         res.sendStatus(201)
     } catch (error) {
@@ -22,11 +21,19 @@ export async function signUp(req, res) {
 
 export async function signIn(req, res) {
     try {
-        const { user } = res.locals;
+        const { userId } = res.locals;
+        const token = uuidV4();
 
+        await connectionDB.query(`
+            INSERT INTO 
+            auth_sessions (user_id, token, valid)
+            VALUES ( $1, $2, $3);
+        `, [userId, token, true])
+
+        res.status(200).send(token)
 
     } catch (error) {
         console.log(error);
-        res.status(422).send(error);
+        res.sendStatus(422);
     }
 }

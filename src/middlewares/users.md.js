@@ -1,5 +1,6 @@
 import joi from 'joi';
 import { connectionDB } from '../database/database.js';
+import bcrypt from "bcrypt";
 
 export async function validateNewUser(req, res, next) {
     try {
@@ -23,7 +24,9 @@ export async function validateNewUser(req, res, next) {
         `, [user.email]);
         if (userExists.rowCount != 0) { return res.sendStatus(409) }
 
-        res.locals.user = user;
+        const passwordHash = bcrypt.hashSync(user.password, 10);
+
+        res.locals.user = { ...user, password: passwordHash };
         next();
 
     } catch (error) {
@@ -42,17 +45,21 @@ export async function validateUserLogin(req, res, next) {
             password: joi.string()
         });
         const { error } = userSchema.validate(user, { abortEarly: false });
-        if (error) { return res.sendStatus(400) }
+        if (error) {
+            const errors = error.details.map(detail => { return detail.message });
+            return res.status(422).send(errors)
+        }
 
         const userOnDb = await connectionDB.query(`
         SELECT * FROM users WHERE email = $1
         `, [user.email]);
         if (userOnDb.rowCount = 0) { return res.sendStatus(401) }
 
-        if (userOnDb.rows[0].password !== user.password) { return res.sendStatus(401) }
+        const passwordOk = bcrypt.compareSync(user.password, userOnDb.rows[0].password);
+        if (!passwordOk) { return res.sendStatus(401) }
 
-        res.locals.user = user;
-        console.log(next)
+        res.locals.userId = userOnDb.rows[0].id;
+
         next();
 
     } catch (error) {
