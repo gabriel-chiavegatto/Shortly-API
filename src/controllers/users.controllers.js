@@ -15,7 +15,7 @@ export async function signUp(req, res) {
         res.sendStatus(201)
     } catch (error) {
         console.log(error);
-        res.sendStatus(422);
+        res.sendStatus(422); 
     }
 }
 
@@ -26,9 +26,9 @@ export async function signIn(req, res) {
 
         await connectionDB.query(`
             INSERT INTO 
-            auth_sessions (user_id, token, valid)
-            VALUES ( $1, $2, $3);
-        `, [userId, token, true])
+            auth_sessions (user_id, token)
+            VALUES ( $1, $2);
+        `, [userId, token])
 
         res.status(200).send(token)
 

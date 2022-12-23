@@ -41,8 +41,8 @@ export async function validateUserLogin(req, res, next) {
         const user = req.body;
 
         const userSchema = joi.object({
-            email: joi.string().email(),
-            password: joi.string()
+            email: joi.string().email().required(),
+            password: joi.string().required()
         });
         const { error } = userSchema.validate(user, { abortEarly: false });
         if (error) {
@@ -53,7 +53,8 @@ export async function validateUserLogin(req, res, next) {
         const userOnDb = await connectionDB.query(`
         SELECT * FROM users WHERE email = $1
         `, [user.email]);
-        if (userOnDb.rowCount = 0) { return res.sendStatus(401) }
+
+        if (userOnDb.rowCount === 0) { return res.sendStatus(401) }
 
         const passwordOk = bcrypt.compareSync(user.password, userOnDb.rows[0].password);
         if (!passwordOk) { return res.sendStatus(401) }
