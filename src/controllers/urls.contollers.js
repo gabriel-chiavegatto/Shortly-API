@@ -29,12 +29,37 @@ export async function renderShortedUrl(req, res) {
             WHERE id = $1;
         `, [id]);
 
-        if(link.rowCount === 0){ return res.sendStatus(404)}
+        if (link.rowCount === 0) { return res.sendStatus(404) }
 
         res.status(200).send(link.rows[0])
 
     } catch (error) {
         console.log(error);
         res.sendStatus(422)
+    }
+}
+
+export async function redirectToUrl(req, res) {
+    try {
+        const { shortUrl } = req.params;
+
+        const link = await connectionDB.query(`
+            SELECT url
+            FROM links
+            WHERE short_url = $1;
+        `, [shortUrl]);
+        if (link.rowCount === 0) { return res.sendStatus(404) }
+
+        await connectionDB.query(`
+            UPDATE links 
+            SET views = views + 1
+            WHERE short_url = $1;
+        `, [shortUrl]);
+
+        res.redirect(302, link.rows[0].url)
+
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(422);
     }
 }
