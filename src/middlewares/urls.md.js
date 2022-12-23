@@ -28,6 +28,8 @@ export async function userUriValidation(req, res, next) {
             WHERE id = $1;
         `, [id]);
 
+        if (link.rowCount === 0) { return res.sendStatus(404) }
+
         const urlUserId = link.rows[0].user_id;
 
         if (urlUserId != userId) { return res.sendStatus(401) }

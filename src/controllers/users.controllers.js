@@ -15,7 +15,7 @@ export async function signUp(req, res) {
         res.sendStatus(201)
     } catch (error) {
         console.log(error);
-        res.sendStatus(422); 
+        res.sendStatus(422);
     }
 }
 
@@ -31,6 +31,43 @@ export async function signIn(req, res) {
         `, [userId, token])
 
         res.status(200).send(token)
+
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(422);
+    }
+}
+
+export async function userLinks(req, res) {
+    try {
+        const { userId } = res.locals;
+        let user = await connectionDB.query(`
+        SELECT u.id, 
+		        u.name, 
+                SUM(l.views) as "visitCount"
+            FROM links l  
+        JOIN users u 
+            ON l.user_id = u.id 
+        WHERE u.id = $1
+        GROUP BY u.id;
+        `, [userId])
+        if (user.rowCount === 0) { return res.sendStatus(404) }
+        console.log(userId);
+
+        user = user.rows[0]
+
+        const allLinks = await connectionDB.query(`
+            SELECT id, short_url AS "shortUrl", url, views AS "visitCount"
+            FROM links
+            WHERE user_id = $1;
+        `, [userId])
+        if (allLinks.rowCount === 0) { return res.sendStatus(404) }
+
+        const shortenedUrls = allLinks.rows;
+
+        user = { ...user, shortenedUrls };
+
+        res.status(200).send(user)
 
     } catch (error) {
         console.log(error);
