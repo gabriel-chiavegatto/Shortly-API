@@ -68,3 +68,28 @@ export async function validateUserLogin(req, res, next) {
         return res.sendStatus(500);
     }
 }
+
+
+export async function authRoutesValidation(req, res, next) {
+
+    const { authorization } = req.headers;
+    const token = authorization?.replace("Bearer ", "");
+    if (!token) { return res.sendStatus(401) }
+
+    try {
+        const user = await connectionDB.query(`
+            SELECT token, user_id
+            FROM auth_sessions
+            WHERE token = $1;
+        `, [token]);
+        if (user.rowCount === 0) { return res.sendStatus(401) }
+        res.locals.userId = user.rows[0].user_id;
+
+        next();
+
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(500)
+    }
+
+}
