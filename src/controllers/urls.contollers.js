@@ -18,3 +18,23 @@ export async function shorten(req, res) {
         res.status(422).send(error.detail)
     }
 }
+
+export async function renderShortedUrl(req, res) {
+    try {
+        const { id } = req.params;
+
+        const link = await connectionDB.query(` 
+            SELECT id, url, short_url 
+            FROM links
+            WHERE id = $1;
+        `, [id]);
+
+        if(link.rowCount === 0){ return res.sendStatus(404)}
+
+        res.status(200).send(link.rows[0])
+
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(422)
+    }
+}
