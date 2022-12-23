@@ -63,3 +63,19 @@ export async function redirectToUrl(req, res) {
         res.sendStatus(422);
     }
 }
+
+export async function deleteUri(req, res) {
+    try {
+        const { id } = req.params;
+        await connectionDB.query(`
+            DELETE FROM links
+            WHERE id = $1;
+        `, [id]);
+
+        res.sendStatus(204)
+
+    } catch (error) {
+        console.log(error);
+        res.sendStatus(422);
+    }
+}
