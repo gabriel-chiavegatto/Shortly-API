@@ -55,7 +55,6 @@ export async function validateUserLogin(req, res, next) {
         console.log(next)
         next();
 
-
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);
