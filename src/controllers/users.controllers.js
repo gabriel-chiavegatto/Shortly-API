@@ -52,7 +52,6 @@ export async function userLinks(req, res) {
         GROUP BY u.id;
         `, [userId])
         if (user.rowCount === 0) { return res.sendStatus(404) }
-        console.log(userId);
 
         user = user.rows[0]
 
